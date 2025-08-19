@@ -1,0 +1,1318 @@
+{% extends 'base.html' %} {% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Economic Dashboard</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      .particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .particle {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        animation: float 8s infinite ease-in-out;
+      }
+
+      .particle:nth-child(odd) {
+        animation-duration: 6s;
+      }
+      .particle:nth-child(even) {
+        animation-duration: 10s;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(100vh) rotate(0deg);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+      }
+
+      .container-fluid {
+        position: relative;
+        z-index: 2;
+        padding: 2rem;
+        animation: containerFadeIn 1s ease-out;
+      }
+
+      @keyframes containerFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .dashboard-header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        animation: headerSlide 0.8s ease-out 0.2s both;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      }
+
+      @keyframes headerSlide {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .dashboard-header h1 {
+        color: white;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        animation: titleGlow 3s ease-in-out infinite alternate;
+        margin: 0;
+      }
+
+      @keyframes titleGlow {
+        from {
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        to {
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3),
+            0 0 30px rgba(255, 255, 255, 0.4);
+        }
+      }
+
+      .dashboard-header p {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1),
+          0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        animation: cardSlide 0.8s ease-out both;
+        margin-bottom: 2rem;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15),
+          0 8px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .filter-card {
+        animation-delay: 0.3s;
+      }
+      .chart-card-1 {
+        animation-delay: 0.4s;
+      }
+      .chart-card-2 {
+        animation-delay: 0.5s;
+      }
+      .chart-card-3 {
+        animation-delay: 0.6s;
+      }
+      .chart-card-4 {
+        animation-delay: 0.7s;
+      }
+
+      @keyframes cardSlide {
+        from {
+          opacity: 0;
+          transform: translateY(50px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .card-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px 20px 0 0 !important;
+        padding: 1.5rem 2rem;
+      }
+
+      .card-header h5 {
+        color: white;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+      }
+
+      .card-body {
+        padding: 2rem;
+      }
+
+      .form-label {
+        color: white;
+        font-weight: 600;
+        margin-bottom: 0.8rem;
+        display: block;
+      }
+
+      .form-select,
+      .form-control {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: white;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+      }
+
+      .form-select:focus,
+      .form-control:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: scale(1.02);
+      }
+
+      .form-select option {
+        background: #333;
+        color: white;
+      }
+
+      .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-primary::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        transition: left 0.6s ease;
+      }
+
+      .btn-primary:hover::before {
+        left: 100%;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      }
+
+      .chart-container {
+        position: relative;
+        height: 350px;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        animation: chartFadeIn 1s ease-out;
+      }
+
+      @keyframes chartFadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .loading-spinner {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .stats-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        animation: statsSlide 0.8s ease-out both;
+        transition: all 0.3s ease;
+      }
+
+      .stats-card:hover {
+        transform: translateY(-3px);
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .stats-card:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .stats-card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .stats-card:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      @keyframes statsSlide {
+        from {
+          opacity: 0;
+          transform: translateX(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .stats-icon {
+        font-size: 2rem;
+        color: #fff;
+        margin-bottom: 0.5rem;
+        animation: iconFloat 2s ease-in-out infinite;
+      }
+
+      @keyframes iconFloat {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+
+      .stats-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+      }
+
+      .stats-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .container-fluid {
+          padding: 1rem;
+        }
+
+        .dashboard-header {
+          padding: 1.5rem;
+        }
+
+        .card-body {
+          padding: 1.5rem;
+        }
+
+        .chart-container {
+          height: 250px;
+        }
+      }
+
+      .filter-row {
+        animation: filterSlide 0.6s ease-out 0.4s both;
+      }
+
+      @keyframes filterSlide {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .city-selector {
+        display: none;
+        animation: slideDown 0.3s ease-out;
+      }
+
+      .city-selector.show {
+        display: block;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          max-height: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          max-height: 200px;
+          transform: translateY(0);
+        }
+      }
+
+      .chart-legend {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="particles">
+      <div class="particle" style="left: 10%; animation-delay: 0s"></div>
+      <div class="particle" style="left: 20%; animation-delay: 1s"></div>
+      <div class="particle" style="left: 30%; animation-delay: 2s"></div>
+      <div class="particle" style="left: 40%; animation-delay: 3s"></div>
+      <div class="particle" style="left: 50%; animation-delay: 4s"></div>
+      <div class="particle" style="left: 60%; animation-delay: 5s"></div>
+      <div class="particle" style="left: 70%; animation-delay: 0.5s"></div>
+      <div class="particle" style="left: 80%; animation-delay: 1.5s"></div>
+      <div class="particle" style="left: 90%; animation-delay: 2.5s"></div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="dashboard-header">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <h1>
+              <i class="fas fa-chart-line me-3"></i>Economic Indicators
+              Dashboard
+            </h1>
+            <p class="text-muted">
+              Visualize World Bank data with interactive charts and advanced
+              analytics
+            </p>
+          </div>
+          <div class="d-flex gap-3">
+            <div class="stats-card">
+              <div class="stats-icon"><i class="fas fa-globe"></i></div>
+              <div class="stats-value" id="countryCount">195</div>
+              <div class="stats-label">Countries</div>
+            </div>
+            <div class="stats-card">
+              <div class="stats-icon"><i class="fas fa-chart-bar"></i></div>
+              <div class="stats-value">6</div>
+              <div class="stats-label">Chart Types</div>
+            </div>
+            <div class="stats-card">
+              <div class="stats-icon"><i class="fas fa-clock"></i></div>
+              <div class="stats-value" id="currentYear">2023</div>
+              <div class="stats-label">Latest Data</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card filter-card">
+        <div class="card-header">
+          <h5><i class="fas fa-filter me-2"></i>Advanced Filters</h5>
+        </div>
+        <div class="card-body">
+          <form id="filterForm">
+            <div class="row filter-row">
+              <div class="col-md-2.5">
+                <label for="countrySelect" class="form-label"
+                  ><i class="fas fa-flag me-2"></i>Country</label
+                >
+                <select class="form-select" id="countrySelect">
+                  <option value="USA">United States</option>
+                  <option value="CHN">China</option>
+                  <option value="JPN">Japan</option>
+                  <option value="DEU">Germany</option>
+                  <option value="IND">India</option>
+                  <option value="GBR">United Kingdom</option>
+                  <option value="FRA">France</option>
+                  <option value="ITA">Italy</option>
+                  <option value="BRA">Brazil</option>
+                  <option value="CAN">Canada</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label for="citySelect" class="form-label"
+                  ><i class="fas fa-city me-2"></i>City (Optional)</label
+                >
+                <select class="form-select" id="citySelect">
+                  <option value="">All Cities</option>
+                  <option value="capital">Capital Only</option>
+                  <option value="major">Major Cities</option>
+                  <option value="metro">Metropolitan Areas</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="indicatorSelect" class="form-label"
+                  ><i class="fas fa-chart-pie me-2"></i>Economic
+                  Indicator</label
+                >
+                <select class="form-select" id="indicatorSelect">
+                  <option value="NY.GDP.MKTP.CD">GDP (current US$)</option>
+                  <option value="SP.POP.TOTL">Population, total</option>
+                  <option value="NY.GDP.PCAP.CD">
+                    GDP per capita (current US$)
+                  </option>
+                  <option value="FP.CPI.TOTL.ZG">
+                    Inflation, consumer prices (annual %)
+                  </option>
+                  <option value="SL.UEM.TOTL.ZS">
+                    Unemployment, total (% of total labor force)
+                  </option>
+                  <option value="NE.TRD.GNFS.ZS">Trade (% of GDP)</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label for="startYear" class="form-label"
+                  ><i class="fas fa-calendar-alt me-2"></i>Start Year</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="startYear"
+                  value="2010"
+                  min="1960"
+                  max="2023"
+                />
+              </div>
+              <div class="col-md-2">
+                <label for="endYear" class="form-label"
+                  ><i class="fas fa-calendar-check me-2"></i>End Year</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="endYear"
+                  value="2020"
+                  min="1960"
+                  max="2023"
+                />
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-search me-2"></i>Apply
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-xl-6 col-lg-12">
+          <div class="card chart-card-1">
+            <div class="card-header">
+              <h5>
+                <i class="fas fa-chart-line me-2"></i>Time Series Analysis
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="lineChart"></canvas>
+                <div class="loading-spinner" id="lineSpinner">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-6 col-lg-12">
+          <div class="card chart-card-2">
+            <div class="card-header">
+              <h5><i class="fas fa-chart-bar me-2"></i>Annual Comparison</h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="barChart"></canvas>
+                <div class="loading-spinner" id="barSpinner">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Area Chart -->
+        <div class="col-xl-6 col-lg-12">
+          <div class="card chart-card-3">
+            <div class="card-header">
+              <h5><i class="fas fa-chart-area me-2"></i>Trend Analysis</h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="areaChart"></canvas>
+                <div class="loading-spinner" id="areaSpinner">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Doughnut Chart -->
+        <div class="col-xl-6 col-lg-12">
+          <div class="card chart-card-4">
+            <div class="card-header">
+              <h5>
+                <i class="fas fa-chart-pie me-2"></i>Distribution Analysis
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="doughnutChart"></canvas>
+                <div class="loading-spinner" id="doughnutSpinner">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Radar Chart -->
+        <div class="col-xl-6 col-lg-12">
+          <div class="card chart-card-1">
+            <div class="card-header">
+              <h5>
+                <i class="fas fa-satellite-dish me-2"></i>Multi-dimensional View
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="radarChart"></canvas>
+                <div class="loading-spinner" id="radarSpinner">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scatter Chart -->
+        <div class="col-xl-6 col-lg-12">
+          <div class="card chart-card-2">
+            <div class="card-header">
+              <h5><i class="fas fa-braille me-2"></i>Correlation Analysis</h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="scatterChart"></canvas>
+                <div class="loading-spinner" id="scatterSpinner">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Chart configurations
+        const chartColors = {
+          primary: "#667eea",
+          secondary: "#764ba2",
+          accent: "#f093fb",
+          success: "#4facfe",
+          warning: "#ffeaa7",
+          danger: "#fd79a8",
+          gradient: {
+            line: ["rgba(102, 126, 234, 0.8)", "rgba(118, 75, 162, 0.8)"],
+            area: ["rgba(102, 126, 234, 0.3)", "rgba(118, 75, 162, 0.3)"],
+            bar: ["rgba(102, 126, 234, 0.7)", "rgba(118, 75, 162, 0.7)"],
+          },
+        };
+
+        const sampleData = {
+          years: [
+            "2010",
+            "2011",
+            "2012",
+            "2013",
+            "2014",
+            "2015",
+            "2016",
+            "2017",
+            "2018",
+            "2019",
+            "2020",
+          ],
+          gdp: [
+            14.99, 15.54, 16.25, 16.84, 17.52, 18.04, 18.57, 19.49, 20.58,
+            21.43, 20.95,
+          ],
+          population: [
+            309.3, 311.6, 313.9, 316.1, 318.4, 320.7, 323.1, 325.7, 328.2,
+            330.7, 331.4,
+          ],
+          gdpPerCapita: [
+            48.4, 49.8, 51.8, 53.3, 54.9, 56.3, 57.6, 59.9, 62.8, 65.3, 63.5,
+          ],
+          inflation: [2.1, 3.1, 2.1, 1.5, 0.1, 0.1, 1.3, 2.1, 2.4, 1.8, 1.2],
+          unemployment: [9.6, 8.9, 8.1, 7.4, 6.2, 5.3, 4.9, 4.4, 3.9, 3.7, 8.1],
+          trade: [
+            29.1, 30.4, 29.9, 29.4, 29.7, 28.1, 27.7, 27.9, 27.1, 26.4, 25.3,
+          ],
+        };
+
+        const charts = {};
+
+        charts.lineChart = new Chart(
+          document.getElementById("lineChart").getContext("2d"),
+          {
+            type: "line",
+            data: {
+              labels: sampleData.years,
+              datasets: [
+                {
+                  label: "GDP (Trillion USD)",
+                  data: sampleData.gdp,
+                  borderColor: chartColors.primary,
+                  backgroundColor: "rgba(102, 126, 234, 0.1)",
+                  tension: 0.4,
+                  fill: true,
+                  pointBackgroundColor: "#fff",
+                  pointBorderColor: chartColors.primary,
+                  pointBorderWidth: 2,
+                  pointRadius: 5,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: "GDP Over Time",
+                  color: "#fff",
+                },
+                legend: {
+                  labels: { color: "#fff" },
+                },
+              },
+              scales: {
+                x: {
+                  ticks: { color: "#fff" },
+                  grid: { color: "rgba(255, 255, 255, 0.1)" },
+                },
+                y: {
+                  beginAtZero: false,
+                  ticks: { color: "#fff" },
+                  grid: { color: "rgba(255, 255, 255, 0.1)" },
+                },
+              },
+            },
+          }
+        );
+
+        charts.barChart = new Chart(
+          document.getElementById("barChart").getContext("2d"),
+          {
+            type: "bar",
+            data: {
+              labels: sampleData.years.slice(-5),
+              datasets: [
+                {
+                  label: "GDP per Capita (Thousand USD)",
+                  data: sampleData.gdpPerCapita.slice(-5),
+                  backgroundColor: chartColors.gradient.bar,
+                  borderColor: chartColors.primary,
+                  borderWidth: 2,
+                  borderRadius: 8,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: "GDP per Capita (Recent Years)",
+                  color: "#fff",
+                },
+                legend: {
+                  labels: { color: "#fff" },
+                },
+              },
+              scales: {
+                x: {
+                  ticks: { color: "#fff" },
+                  grid: { color: "rgba(255, 255, 255, 0.1)" },
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: { color: "#fff" },
+                  grid: { color: "rgba(255, 255, 255, 0.1)" },
+                },
+              },
+            },
+          }
+        );
+
+        charts.areaChart = new Chart(
+          document.getElementById("areaChart").getContext("2d"),
+          {
+            type: "line",
+            data: {
+              labels: sampleData.years,
+              datasets: [
+                {
+                  label: "Population (Millions)",
+                  data: sampleData.population,
+                  backgroundColor: "rgba(102, 126, 234, 0.3)",
+                  borderColor: chartColors.primary,
+                  fill: true,
+                  tension: 0.4,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: "Population Growth Trend",
+                  color: "#fff",
+                },
+                legend: {
+                  labels: { color: "#fff" },
+                },
+              },
+              scales: {
+                x: {
+                  ticks: { color: "#fff" },
+                  grid: { color: "rgba(255, 255, 255, 0.1)" },
+                },
+                y: {
+                  ticks: { color: "#fff" },
+                  grid: { color: "rgba(255, 255, 255, 0.1)" },
+                },
+              },
+            },
+          }
+        );
+
+        charts.doughnutChart = new Chart(
+          document.getElementById("doughnutChart").getContext("2d"),
+          {
+            type: "doughnut",
+            data: {
+              labels: [
+                "GDP",
+                "Population",
+                "Trade",
+                "Unemployment",
+                "Inflation",
+              ],
+              datasets: [
+                {
+                  data: [65, 15, 10, 5, 5],
+                  backgroundColor: [
+                    chartColors.primary,
+                    chartColors.secondary,
+                    chartColors.accent,
+                    chartColors.success,
+                    chartColors.warning,
+                  ],
+                  borderColor: "#fff",
+                  borderWidth: 2,
+                  hoverOffset: 10,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: "Economic Indicators Distribution",
+                  color: "#fff",
+                },
+                legend: {
+                  position: "bottom",
+                  labels: {
+                    color: "#fff",
+                    padding: 15,
+                    usePointStyle: true,
+                  },
+                },
+              },
+              cutout: "60%",
+            },
+          }
+        );
+
+        charts.radarChart = new Chart(
+          document.getElementById("radarChart").getContext("2d"),
+          {
+            type: "radar",
+            data: {
+              labels: [
+                "GDP Growth",
+                "Population",
+                "Trade",
+                "Employment",
+                "Price Stability",
+              ],
+              datasets: [
+                {
+                  label: "Current Year",
+                  data: [8, 6, 7, 8, 9],
+                  backgroundColor: "rgba(102, 126, 234, 0.2)",
+                  borderColor: chartColors.primary,
+                  pointBackgroundColor: chartColors.primary,
+                  pointBorderColor: "#fff",
+                  pointRadius: 6,
+                },
+                {
+                  label: "Previous Year",
+                  data: [6, 5, 6, 7, 8],
+                  backgroundColor: "rgba(118, 75, 162, 0.2)",
+                  borderColor: chartColors.secondary,
+                  pointBackgroundColor: chartColors.secondary,
+                  pointBorderColor: "#fff",
+                  pointRadius: 6,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: "Multi-Dimensional Economic View",
+                  color: "#fff",
+                },
+                legend: {
+                  labels: { color: "#fff" },
+                },
+              },
+              scales: {
+                r: {
+                  beginAtZero: true,
+                  max: 10,
+                  ticks: {
+                    color: "#fff",
+                    backdropColor: "transparent",
+                  },
+                  grid: { color: "rgba(255, 255, 255, 0.1)" },
+                  angleLines: { color: "rgba(255, 255, 255, 0.1)" },
+                  pointLabels: { color: "#fff" },
+                },
+              },
+            },
+          }
+        );
+
+        charts.scatterChart = new Chart(
+          document.getElementById("scatterChart").getContext("2d"),
+          {
+            type: "scatter",
+            data: {
+              datasets: [
+                {
+                  label: "GDP vs Population",
+                  data: sampleData.years.map((year, index) => ({
+                    x: sampleData.population[index],
+                    y: sampleData.gdp[index],
+                  })),
+                  backgroundColor: chartColors.primary,
+                  borderColor: chartColors.primary,
+                  pointRadius: 8,
+                  pointHoverRadius: 12,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: "GDP vs Population Correlation",
+                  color: "#fff",
+                },
+                legend: {
+                  labels: { color: "#fff" },
+                },
+              },
+              scales: {
+                x: {
+                  type: "linear",
+                  position: "bottom",
+                  title: {
+                    display: true,
+                    text: "Population (Millions)",
+                    color: "#fff",
+                  },
+                  ticks: { color: "#fff" },
+                  grid: { color: "rgba(255, 255, 255, 0.1)" },
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: "GDP (Trillion USD)",
+                    color: "#fff",
+                  },
+                  ticks: { color: "#fff" },
+                  grid: { color: "rgba(255, 255, 255, 0.1)" },
+                },
+              },
+            },
+          }
+        );
+
+        document
+          .getElementById("filterForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+            updateCharts();
+          });
+
+        function updateCharts() {
+          const country = document.getElementById("countrySelect").value;
+          const indicator = document.getElementById("indicatorSelect").value;
+          const startYear = parseInt(
+            document.getElementById("startYear").value
+          );
+          const endYear = parseInt(document.getElementById("endYear").value);
+
+          showLoadingSpinners();
+
+          setTimeout(() => {
+            hideLoadingSpinners();
+
+            updateChartData(country, indicator, startYear, endYear);
+          }, 1000);
+        }
+
+        function showLoadingSpinners() {
+          document.querySelectorAll(".loading-spinner").forEach((spinner) => {
+            spinner.style.display = "block";
+          });
+        }
+
+        function hideLoadingSpinners() {
+          document.querySelectorAll(".loading-spinner").forEach((spinner) => {
+            spinner.style.display = "none";
+          });
+        }
+
+        function updateChartData(country, indicator, startYear, endYear) {
+          const yearRange = sampleData.years.filter(
+            (year) => parseInt(year) >= startYear && parseInt(year) <= endYear
+          );
+
+          const startIndex = sampleData.years.indexOf(yearRange[0]);
+          const endIndex =
+            sampleData.years.indexOf(yearRange[yearRange.length - 1]) + 1;
+
+          let selectedData;
+          switch (indicator) {
+            case "NY.GDP.MKTP.CD":
+              selectedData = sampleData.gdp;
+              break;
+            case "SP.POP.TOTL":
+              selectedData = sampleData.population;
+              break;
+            case "NY.GDP.PCAP.CD":
+              selectedData = sampleData.gdpPerCapita;
+              break;
+            case "FP.CPI.TOTL.ZG":
+              selectedData = sampleData.inflation;
+              break;
+            case "SL.UEM.TOTL.ZS":
+              selectedData = sampleData.unemployment;
+              break;
+            case "NE.TRD.GNFS.ZS":
+              selectedData = sampleData.trade;
+              break;
+            default:
+              selectedData = sampleData.gdp;
+          }
+
+          charts.lineChart.data.labels = yearRange;
+          charts.lineChart.data.datasets[0].data = selectedData.slice(
+            startIndex,
+            endIndex
+          );
+          charts.lineChart.data.datasets[0].label =
+            getIndicatorLabel(indicator);
+          charts.lineChart.options.plugins.title.text = `${getIndicatorLabel(
+            indicator
+          )} Over Time`;
+          charts.lineChart.update();
+
+          charts.barChart.data.labels = yearRange;
+          charts.barChart.data.datasets[0].data = selectedData.slice(
+            startIndex,
+            endIndex
+          );
+          charts.barChart.data.datasets[0].label = getIndicatorLabel(indicator);
+          charts.barChart.options.plugins.title.text = `${getIndicatorLabel(
+            indicator
+          )} by Year`;
+          charts.barChart.update();
+
+          charts.areaChart.data.labels = yearRange;
+          charts.areaChart.data.datasets[0].data = selectedData.slice(
+            startIndex,
+            endIndex
+          );
+          charts.areaChart.data.datasets[0].label =
+            getIndicatorLabel(indicator);
+          charts.areaChart.options.plugins.title.text = `${getIndicatorLabel(
+            indicator
+          )} Trend`;
+          charts.areaChart.update();
+
+          charts.scatterChart.data.datasets[0].data = yearRange.map(
+            (year, index) => ({
+              x: parseInt(year),
+              y: selectedData[startIndex + index],
+            })
+          );
+          charts.scatterChart.options.scales.x.title.text = "Year";
+          charts.scatterChart.options.scales.y.title.text =
+            getIndicatorLabel(indicator);
+          charts.scatterChart.update();
+
+          const radarData = calculateRadarData(
+            selectedData.slice(startIndex, endIndex)
+          );
+          charts.radarChart.data.datasets[0].data = radarData;
+          charts.radarChart.update();
+
+          showNotification(
+            `Charts updated for ${country} (${startYear}-${endYear})`,
+            "success"
+          );
+        }
+
+        function getIndicatorLabel(indicatorCode) {
+          const indicatorLabels = {
+            "NY.GDP.MKTP.CD": "GDP (Trillion USD)",
+            "SP.POP.TOTL": "Population (Millions)",
+            "NY.GDP.PCAP.CD": "GDP per Capita (Thousand USD)",
+            "FP.CPI.TOTL.ZG": "Inflation (%)",
+            "SL.UEM.TOTL.ZS": "Unemployment (%)",
+            "NE.TRD.GNFS.ZS": "Trade (% of GDP)",
+          };
+          return indicatorLabels[indicatorCode] || "Economic Indicator";
+        }
+
+        function calculateRadarData(data) {
+          if (data.length === 0) return [0, 0, 0, 0, 0];
+
+          const maxVal = Math.max(...data);
+          const minVal = Math.min(...data);
+          const avgVal = data.reduce((a, b) => a + b, 0) / data.length;
+
+          const midPoint = Math.floor(data.length / 2);
+          const firstHalfAvg =
+            data.slice(0, midPoint).reduce((a, b) => a + b, 0) / midPoint;
+          const secondHalfAvg =
+            data.slice(midPoint).reduce((a, b) => a + b, 0) /
+            (data.length - midPoint);
+          const growthRate =
+            ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 10;
+
+          const squaredDiffs = data.map((value) => Math.pow(value - avgVal, 2));
+          const variance =
+            squaredDiffs.reduce((a, b) => a + b, 0) / data.length;
+          const stability =
+            10 - Math.min(10, (Math.sqrt(variance) / (maxVal - minVal)) * 20);
+
+          return [
+            Math.min(10, (avgVal / (maxVal || 1)) * 10),
+            Math.min(10, growthRate),
+            Math.min(10, stability),
+            Math.min(10, (data[data.length - 1] / (maxVal || 1)) * 10),
+            5,
+          ];
+        }
+        function showNotification(message, type) {
+          const notification = document.createElement("div");
+          notification.className = `alert alert-${type} position-fixed`;
+          notification.style.cssText = `
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    min-width: 300px;
+                    animation: slideInRight 0.5s ease-out;
+                `;
+          notification.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+                `;
+
+          document.body.appendChild(notification);
+
+          setTimeout(() => {
+            if (notification.parentElement) {
+              notification.remove();
+            }
+          }, 3000);
+        }
+
+        const style = document.createElement("style");
+        style.textContent = `
+                @keyframes slideInRight {
+                    from {
+                        opacity: 0;
+                        transform: translateX(100%);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+            `;
+        document.head.appendChild(style);
+
+        document.getElementById("currentYear").textContent =
+          new Date().getFullYear();
+
+        document.querySelectorAll(".card").forEach((card) => {
+          card.addEventListener("mouseenter", function () {
+            this.style.transform = "translateY(-10px) scale(1.02)";
+          });
+
+          card.addEventListener("mouseleave", function () {
+            this.style.transform = "translateY(0) scale(1)";
+          });
+        });
+
+        const tooltipTriggerList = [].slice.call(
+          document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        );
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        document.addEventListener("keydown", function (e) {
+          if (e.ctrlKey && e.key === "Enter") {
+            document
+              .getElementById("filterForm")
+              .dispatchEvent(new Event("submit"));
+          }
+        });
+
+        window.exportChart = function (chartId) {
+          const canvas = document.getElementById(chartId);
+          const link = document.createElement("a");
+          link.download = `${chartId}_export.png`;
+          link.href = canvas.toDataURL();
+          link.click();
+        };
+
+        console.log(`
+                🎯 Economic Dashboard Initialized Successfully!
+                
+                Features:
+                • 6 Interactive Chart Types
+                • Real-time Data Filtering  
+                • Responsive Design
+                • Export Functionality
+                • Keyboard Shortcuts (Ctrl+Enter to apply filters)
+                
+                Built with Chart.js, Bootstrap 5, and modern CSS animations.
+            `);
+      });
+    </script>
+  </body>
+</html>
+{% endblock %}
